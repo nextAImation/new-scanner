@@ -1,0 +1,76 @@
+## 📈 Market Heatmap (CSV)
+=== MARKET HEATMAP (CSV) ===
+BTC    | Price: 91754.0 | Change: -2.90889% | Vol: 90433195361
+ETH    | Price: 2988.76 | Change: -3.75524% | Vol: 39550652756
+USDT   | Price: 0.998954 | Change: -0.06353% | Vol: 135675308470
+XRP    | Price: 2.14 | Change: -3.86185% | Vol: 5776046263
+BNB    | Price: 898.78 | Change: -2.65616% | Vol: 3198925137
+USDC   | Price: 0.999799 | Change: 0.00893% | Vol: 10962269188
+SOL    | Price: 130.18 | Change: -5.32154% | Vol: 7444826843
+TRX    | Price: 0.289954 | Change: -0.71756% | Vol: 1005143616
+STETH  | Price: 2987.11 | Change: -3.66493% | Vol: 81737702
+DOGE   | Price: 0.152359 | Change: -2.88333% | Vol: 2682817905
+ADA    | Price: 0.461969 | Change: -4.78418% | Vol: 1372680180
+FIGR_HELOC | Price: 1.029 | Change: 0.86255% | Vol: 13301525
+WSTETH | Price: 3646.26 | Change: -3.62664% | Vol: 27195356
+WBTC   | Price: 91619.0 | Change: -2.64809% | Vol: 463396613
+WBT    | Price: 50.99 | Change: -2.46681% | Vol: 165174057
+WBETH  | Price: 3240.55 | Change: -3.7776% | Vol: 20188745
+ZEC    | Price: 642.85 | Change: -5.86667% | Vol: 2353659261
+HYPE   | Price: 37.98 | Change: -0.86747% | Vol: 406233515
+BCH    | Price: 493.06 | Change: 2.71277% | Vol: 300301760
+USDS   | Price: 0.999887 | Change: -0.00306% | Vol: 4248022
+LINK   | Price: 13.19 | Change: -3.77225% | Vol: 871938338
+BSC-USD | Price: 0.999382 | Change: 0.03401% | Vol: 1615993931
+LEO    | Price: 9.13 | Change: -0.43358% | Vol: 758492
+XLM    | Price: 0.246358 | Change: -3.1388% | Vol: 213799364
+USDE   | Price: 0.998576 | Change: -0.04832% | Vol: 272496925
+WETH   | Price: 2995.29 | Change: -3.67428% | Vol: 222477015
+WEETH  | Price: 3239.81 | Change: -3.72173% | Vol: 41185552
+XMR    | Price: 403.26 | Change: 2.02596% | Vol: 201447834
+LTC    | Price: 91.93 | Change: -4.6128% | Vol: 783172885
+CBBTC  | Price: 91787.0 | Change: -2.91111% | Vol: 678521912
+AVAX   | Price: 14.4 | Change: -4.10162% | Vol: 630457510
+HBAR   | Price: 0.143417 | Change: -3.48735% | Vol: 296143055
+SUI    | Price: 1.6 | Change: -4.08494% | Vol: 1180722793
+SHIB   | Price: 8.52e-06 | Change: -3.49873% | Vol: 147797478
+UNI    | Price: 7.16 | Change: -0.72475% | Vol: 1340973193
+DAI    | Price: 1.0 | Change: 0.11142% | Vol: 124908532
+SUSDE  | Price: 1.2 | Change: -0.04846% | Vol: 33706612
+DOT    | Price: 2.65 | Change: -3.88236% | Vol: 262833028
+TON    | Price: 1.74 | Change: -2.94939% | Vol: 151434643
+USDT0  | Price: 0.998916 | Change: -0.07898% | Vol: 255695678
+CRO    | Price: 0.103968 | Change: -4.57857% | Vol: 32461468
+SUSDS  | Price: 1.088 | Change: 0.71246% | Vol: 16276042
+M      | Price: 2.15 | Change: 0.2631% | Vol: 19170226
+WLFI   | Price: 0.133914 | Change: -6.64274% | Vol: 188804056
+CC     | Price: 0.10424 | Change: -7.24105% | Vol: 45909935
+MNT    | Price: 1.11 | Change: -7.49852% | Vol: 98301468
+PYUSD  | Price: 1.001 | Change: 0.03526% | Vol: 201916691
+TAO    | Price: 313.31 | Change: -2.31858% | Vol: 205088272
+ICP    | Price: 5.42 | Change: 9.13229% | Vol: 544156780
+NEAR   | Price: 2.2 | Change: -3.11659% | Vol: 481178212
+
+---
+## 🏦 Market Archive (CSV)
+=== MARKET ARCHIVE (CSV) ===
+GLOBAL       | approx_total_market_cap_usd | 3129377674839.0 | nan
+GLOBAL       | sample_size  | 50.0 | nan
+DOMINANCE    | BTC          | 58.49904664805866 | %
+DOMINANCE    | ETH          | 11.521446119620238 | %
+DOMINANCE    | OTHERS       | 29.979507232321104 | %
+TOP_GAINERS  | ICP          | 9.13229 | price=5.42, vol=544156780
+TOP_GAINERS  | BCH          | 2.71277 | price=493.06, vol=300301760
+TOP_GAINERS  | XMR          | 2.02596 | price=403.26, vol=201447834
+TOP_GAINERS  | FIGR_HELOC   | 0.86255 | price=1.029, vol=13301525
+TOP_GAINERS  | SUSDS        | 0.71246 | price=1.088, vol=16276042
+TOP_LOSERS   | MNT          | -7.49852 | price=1.11, vol=98301468
+TOP_LOSERS   | CC           | -7.24105 | price=0.10424, vol=45909935
+TOP_LOSERS   | WLFI         | -6.64274 | price=0.133914, vol=188804056
+TOP_LOSERS   | ZEC          | -5.86667 | price=642.85, vol=2353659261
+TOP_LOSERS   | SOL          | -5.32154 | price=130.18, vol=7444826843
+TOP_VOLUME   | USDT         | -0.06353 | price=0.998954, vol=135675308470
+TOP_VOLUME   | BTC          | -2.90889 | price=91754.0, vol=90433195361
+TOP_VOLUME   | ETH          | -3.75524 | price=2988.76, vol=39550652756
+TOP_VOLUME   | USDC         | 0.00893 | price=0.999799, vol=10962269188
+TOP_VOLUME   | SOL          | -5.32154 | price=130.18, vol=7444826843

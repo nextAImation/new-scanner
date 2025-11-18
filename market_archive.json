@@ -1,0 +1,108 @@
+{
+  "generated_at": "2025-11-17T22:03:15.126331",
+  "global": {
+    "approx_total_market_cap_usd": 3134101395221.0,
+    "sample_size": 50
+  },
+  "dominance": {
+    "BTC": 58.45131367225031,
+    "ETH": 11.56874528618858,
+    "OTHERS": 29.979941041561112
+  },
+  "top_gainers": [
+    {
+      "symbol": "ICP",
+      "price": 5.35,
+      "change_24h": 9.95246,
+      "volume_24h": 561541044.0
+    },
+    {
+      "symbol": "UNI",
+      "price": 7.39,
+      "change_24h": 4.10215,
+      "volume_24h": 1393698170.0
+    },
+    {
+      "symbol": "BCH",
+      "price": 490.19,
+      "change_24h": 2.87461,
+      "volume_24h": 309554368.0
+    },
+    {
+      "symbol": "XMR",
+      "price": 403.19,
+      "change_24h": 1.95928,
+      "volume_24h": 204244544.0
+    },
+    {
+      "symbol": "HYPE",
+      "price": 38.18,
+      "change_24h": 0.91238,
+      "volume_24h": 425126043.0
+    }
+  ],
+  "top_losers": [
+    {
+      "symbol": "MNT",
+      "price": 1.1,
+      "change_24h": -6.38373,
+      "volume_24h": 100540921.0
+    },
+    {
+      "symbol": "LTC",
+      "price": 91.47,
+      "change_24h": -4.13081,
+      "volume_24h": 819429231.0
+    },
+    {
+      "symbol": "CRO",
+      "price": 0.103342,
+      "change_24h": -4.0719,
+      "volume_24h": 34955096.0
+    },
+    {
+      "symbol": "SOL",
+      "price": 130.44,
+      "change_24h": -3.97986,
+      "volume_24h": 7686813961.0
+    },
+    {
+      "symbol": "ADA",
+      "price": 0.460775,
+      "change_24h": -3.80178,
+      "volume_24h": 1397301595.0
+    }
+  ],
+  "top_volume": [
+    {
+      "symbol": "USDT",
+      "price": 0.99897,
+      "change_24h": -0.07617,
+      "volume_24h": 139011898863.0
+    },
+    {
+      "symbol": "BTC",
+      "price": 91796.0,
+      "change_24h": -1.40775,
+      "volume_24h": 96374430380.0
+    },
+    {
+      "symbol": "ETH",
+      "price": 3002.56,
+      "change_24h": -1.63253,
+      "volume_24h": 41580996161.0
+    },
+    {
+      "symbol": "USDC",
+      "price": 0.999706,
+      "change_24h": -0.00734,
+      "volume_24h": 15495249288.0
+    },
+    {
+      "symbol": "SOL",
+      "price": 130.44,
+      "change_24h": -3.97986,
+      "volume_24h": 7686813961.0
+    }
+  ]
+}

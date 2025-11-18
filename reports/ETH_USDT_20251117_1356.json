@@ -1,0 +1,45 @@
+{
+  "symbol": "ETH/USDT",
+  "timeframes": {
+    "4h": {
+      "symbol": "ETH/USDT",
+      "timeframe": "4h",
+      "data_quality": {
+        "status": "good",
+        "issues": [],
+        "nan_ohlc": 0,
+        "flat_bars": 0,
+        "zero_volume": 0,
+        "total_bars": 500
+      },
+      "dist_from_90d_high_pct": -20.7911,
+      "dist_from_90d_low_pct": 3.2846,
+      "velocity": {
+        "v_short": 0.03814043211123334,
+        "v_mid": -0.11358826776445058,
+        "v_long": -0.0577331500779896,
+        "acceleration": 0.1517286998756839,
+        "velocity_divergence": -0.05585511768646098,
+        "impulse": "neutral"
+      },
+      "trend_quality": null,
+      "liquidity_heatmap": null,
+      "market_phase": "downtrend",
+      "risk_structure": {
+        "score": 12.29,
+        "volatility": 0.0,
+        "trend_consistency": 0.0,
+        "wick_quality": 0.0,
+        "pullback_risk": 81.92
+      },
+      "sr_reliability": {
+        "support_strength": 0.056666666666666664,
+        "resistance_strength": 0.056666666666666664,
+        "support_tests": 17,
+        "resistance_tests": 17,
+        "noise_level": 0.022081885369057672
+      },
+      "compression": {
+        "compression_score": 0.15732077595248467,
+        "volatility": 41.767022659457716,
+        "squeeze": 

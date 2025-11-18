@@ -1,0 +1,45 @@
+{
+  "symbol": "BTC/USDT",
+  "timeframes": {
+    "4h": {
+      "symbol": "BTC/USDT",
+      "timeframe": "4h",
+      "data_quality": {
+        "status": "good",
+        "issues": [],
+        "nan_ohlc": 0,
+        "flat_bars": 0,
+        "zero_volume": 0,
+        "total_bars": 500
+      },
+      "dist_from_90d_high_pct": -15.4291,
+      "dist_from_90d_low_pct": 0.7421,
+      "velocity": {
+        "v_short": -0.07092426448377853,
+        "v_mid": -0.20507759268606485,
+        "v_long": -0.116901770327769,
+        "acceleration": 0.13415332820228631,
+        "velocity_divergence": -0.08817582235829585,
+        "impulse": "neutral"
+      },
+      "trend_quality": null,
+      "liquidity_heatmap": null,
+      "market_phase": "unknown",
+      "risk_structure": {
+        "score": 32.77,
+        "volatility": 36.9,
+        "trend_consistency": 0.0,
+        "wick_quality": 42.7,
+        "pullback_risk": 87.72
+      },
+      "sr_reliability": {
+        "support_strength": 0.06333333333333334,
+        "resistance_strength": 0.056666666666666664,
+        "support_tests": 19,
+        "resistance_tests": 17,
+        "noise_level": 0.013397803089330812
+      },
+      "compression": {
+        "compression_score": 0.1531773993988499,
+        "volatility": 854.8611142400563,
+        "squeeze": 

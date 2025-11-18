@@ -1,0 +1,411 @@
+{
+  "symbol": "BTC/USDT",
+  "timeframes": {
+    "4h": {
+      "symbol": "BTC/USDT",
+      "timeframe": "4h",
+      "data_quality": {
+        "status": "good",
+        "issues": [],
+        "nan_ohlc": 0,
+        "flat_bars": 0,
+        "zero_volume": 0,
+        "total_bars": 500
+      },
+      "dist_from_90d_high_pct": -15.1544,
+      "dist_from_90d_low_pct": 1.0981,
+      "price": 93976.3,
+      "rsi14": 34.70125562042605,
+      "atr14": 1226.6000000000006,
+      "ema20": 96139.67908458713,
+      "ema50": 98912.69668308846,
+      "ema200": 105528.86352675634,
+      "adx14": 37.75287302597782,
+      "vpvr_poc": 110381.93333333332,
+      "vpvr_low": 109726.06666666665,
+      "vpvr_high": 111037.79999999999,
+      "fvg": [
+        {
+          "type": "bearish",
+          "start": 101172.4,
+          "end": 100507.0,
+          "time": "2025-11-13"
+        },
+        {
+          "type": "bearish",
+          "start": 98694.9,
+          "end": 97549.9,
+          "time": "2025-11-14"
+        },
+        {
+          "type": "bullish",
+          "start": 94739.9,
+          "end": 94889.9,
+          "time": "2025-11-17"
+        }
+      ],
+      "candle": {
+        "open": 95568.4,
+        "high": 96071.3,
+        "low": 93583.5,
+        "close": 93976.3,
+        "volume": 3344.772968,
+        "ema20": 96139.67908458713,
+        "ema50": 98912.69668308846,
+        "ema200": 105528.86352675634,
+        "confirmed": false,
+        "low_volume_flag": false
+      },
+      "volatility": {
+        "bb_mid": 95539.755,
+        "bb_upper": 97183.46200356002,
+        "bb_lower": 93896.04799643999,
+        "bb_width": 0.03440885950691456,
+        "atr_rel": 0.013052226997657927,
+        "volume_zscore": 1.4091154227585296,
+        "ema_slope": -0.5224409233749597,
+        "regime": "strong_trend",
+        "volume_climax": false
+      },
+      "structure": {
+        "last_swings": [
+          {
+            "type": "L",
+            "price": 100802.9,
+            "time": "2025-11-12T16:00:00+00:00"
+          },
+          {
+            "type": "H",
+            "price": 104066.4,
+            "time": "2025-11-13T04:00:00+00:00"
+          },
+          {
+            "type": "L",
+            "price": 94010.0,
+            "time": "2025-11-14T20:00:00+00:00"
+          },
+          {
+            "type": "L",
+            "price": 94842.2,
+            "time": "2025-11-16T00:00:00+00:00"
+          },
+          {
+            "type": "H",
+            "price": 96629.9,
+            "time": "2025-11-16T08:00:00+00:00"
+          },
+          {
+            "type": "L",
+            "price": 92955.6,
+            "time": "2025-11-16T20:00:00+00:00"
+          }
+        ],
+        "tag": "unknown",
+        "choch": false,
+        "bos": false,
+        "pivot_distances": {
+          "from_last_high_pct": -2.746147931437362,
+          "from_last_low_pct": 1.0980511125741719
+        }
+      },
+      "structure_zones": [
+        {
+          "type": "resistance",
+          "level": 96629.9,
+          "count": 1
+        },
+        {
+          "type": "resistance",
+          "level": 104066.4,
+          "count": 1
+        },
+        {
+          "type": "support",
+          "level": 92955.6,
+          "count": 1
+        },
+        {
+          "type": "support",
+          "level": 94010.0,
+          "count": 1
+        },
+        {
+          "type": "support",
+          "level": 94842.2,
+          "count": 1
+        },
+        {
+          "type": "support",
+          "level": 100802.9,
+          "count": 1
+        }
+      ],
+      "trendline": {
+        "slope_pct": -0.27335934455629884,
+        "direction": "down"
+      },
+      "liquidity_map": [
+        {
+          "price_low": 111037.79999999999,
+          "price_high": 112349.53333333333,
+          "volume_share_pct": 14.433426052763068
+        },
+        {
+          "price_low": 109726.06666666665,
+          "price_high": 111037.79999999999,
+          "volume_share_pct": 12.207856627955355
+        },
+        {
+          "price_low": 112349.53333333333,
+          "price_high": 113661.26666666666,
+          "volume_share_pct": 8.618283498565674
+        }
+      ],
+      "candle_patterns_htf": [],
+      "volume_climax": false,
+      "crash_risk": {
+        "score": 10,
+        "flag": false,
+        "reasons": [
+          "Bearish FVG detected"
+        ]
+      },
+      "correlation": {
+        "with_btc": 0.999998437034323,
+        "beta_vs_btc": 1.000269039147505
+      },
+      "liquidity": {
+        "score_30d_notional": null
+      }
+    },
+    "1d": {
+      "symbol": "BTC/USDT",
+      "timeframe": "1d",
+      "data_quality": {
+        "status": "good",
+        "issues": [],
+        "nan_ohlc": 0,
+        "flat_bars": 0,
+        "zero_volume": 0,
+        "total_bars": 500
+      },
+      "dist_from_90d_high_pct": -25.5335,
+      "dist_from_90d_low_pct": 1.0949,
+      "price": 93973.4,
+      "rsi14": 29.556627881321646,
+      "atr14": 4364.078571428571,
+      "ema20": 102000.00859259152,
+      "ema50": 107075.55509952754,
+      "ema200": 107312.8268156602,
+      "adx14": 36.39105507676436,
+      "vpvr_poc": 104156.61041666666,
+      "vpvr_low": 103180.8125,
+      "vpvr_high": 105132.40833333333,
+      "fvg": [
+        {
+          "type": "bullish",
+          "start": 103420.5,
+          "end": 104264.5,
+          "time": "2025-11-10"
+        },
+        {
+          "type": "bearish",
+          "start": 100802.9,
+          "end": 99871.8,
+          "time": "2025-11-14"
+        },
+        {
+          "type": "bearish",
+          "start": 98000.0,
+          "end": 96825.2,
+          "time": "2025-11-15"
+        }
+      ],
+      "candle": {
+        "open": 94260.3,
+        "high": 96071.3,
+        "low": 93583.5,
+        "close": 93973.4,
+        "volume": 8852.84231,
+        "ema20": 102000.00859259152,
+        "ema50": 107075.55509952754,
+        "ema200": 107312.8268156602,
+        "confirmed": false,
+        "low_volume_flag": false
+      },
+      "volatility": {
+        "bb_mid": 103055.10500000001,
+        "bb_upper": 113871.41068597896,
+        "bb_lower": 92238.79931402106,
+        "bb_width": 0.20991304964424518,
+        "atr_rel": 0.04643950917417664,
+        "volume_zscore": -0.38176223046103913,
+        "ema_slope": -3.4646233889628166,
+        "regime": "strong_trend",
+        "volume_climax": false
+      },
+      "structure": {
+        "last_swings": [
+          {
+            "type": "L",
+            "price": 106582.7,
+            "time": "2025-10-22T00:00:00+00:00"
+          },
+          {
+            "type": "H",
+            "price": 116400.0,
+            "time": "2025-10-27T00:00:00+00:00"
+          },
+          {
+            "type": "L",
+            "price": 106285.4,
+            "time": "2025-10-30T00:00:00+00:00"
+          },
+          {
+            "type": "H",
+            "price": 111236.5,
+            "time": "2025-11-02T00:00:00+00:00"
+          },
+          {
+            "type": "L",
+            "price": 98947.8,
+            "time": "2025-11-04T00:00:00+00:00"
+          },
+          {
+            "type": "H",
+            "price": 107533.0,
+            "time": "2025-11-11T00:00:00+00:00"
+          }
+        ],
+        "tag": "unknown",
+        "choch": false,
+        "bos": false,
+        "pivot_distances": {
+          "from_last_high_pct": -12.60971050747213,
+          "from_last_low_pct": -5.027297221363193
+        }
+      },
+      "structure_zones": [
+        {
+          "type": "resistance",
+          "level": 107533.0,
+          "count": 1
+        },
+        {
+          "type": "resistance",
+          "level": 111236.5,
+          "count": 1
+        },
+        {
+          "type": "resistance",
+          "level": 116400.0,
+          "count": 1
+        },
+        {
+          "type": "support",
+          "level": 106434.04999999999,
+          "count": 2
+        },
+        {
+          "type": "support",
+          "level": 98947.8,
+          "count": 1
+        }
+      ],
+      "trendline": {
+        "slope_pct": -0.4276121588430517,
+        "direction": "down"
+      },
+      "liquidity_map": [
+        {
+          "price_low": 95115.22499999998,
+          "price_high": 98068.53916666665,
+          "volume_share_pct": 13.19654139291861
+        },
+        {
+          "price_low": 56722.14083333333,
+          "price_high": 59675.455,
+          "volume_share_pct": 7.79294566053188
+        },
+        {
+          "price_low": 92161.91083333333,
+          "price_high": 95115.22499999998,
+          "volume_share_pct": 7.450795857839698
+        }
+      ],
+      "candle_patterns_htf": [],
+      "volume_climax": false,
+      "crash_risk": {
+        "score": 60,
+        "flag": true,
+        "reasons": [
+          "ATR relative > 4.5% (volatility spike)",
+          "BB width > 0.04 (compression → expansion)",
+          "EMA20 slope < -2.5% (down momentum)",
+          "Bearish FVG detected"
+        ]
+      },
+      "correlation": {
+        "with_btc": 0.999999998744784,
+        "beta_vs_btc": 1.0000002658387934
+      },
+      "liquidity": {
+        "score_30d_notional": 30539907105.272682
+      },
+      "deviation": {
+        "from_90d_high_pct": -25.533477818147244,
+        "from_90d_low_pct": 1.094931343566163,
+        "from_365d_high_pct": -25.533477818147244,
+        "from_365d_low_pct": 26.138791946308714
+      }
+    }
+  },
+  "context": {
+    "fng_alt": 14,
+    "fng_alt_avg7": 16.428571428571427,
+    "funding_rate_avg": 6.67e-05,
+    "social_change": null,
+    "macro": {
+      "DXY": {
+        "last": 99.52200317382812,
+        "chg_pct": 0.11
+      },
+      "NASDAQ": {
+        "last": 24984.501953125,
+        "chg_pct": -0.09
+      },
+      "US10Y": {
+        "last": 4.13100004196167,
+        "chg_pct": -0.41
+      }
+    },
+    "derivatives": {
+      "BTCUSDT": {
+        "open_interest": 96503.874,
+        "funding_rate": 7.196e-05,
+        "long_short_ratio": null
+      },
+      "ETHUSDT": {
+        "open_interest": 1908804.226,
+        "funding_rate": 6.024e-05,
+        "long_short_ratio": null
+      }
+    },
+    "onchain": {
+      "BTC": -35362.096285783045,
+      "ETH": -724094.4098147609
+    },
+    "orderbook": {
+      "BTC": {
+        "bids": 4.69,
+        "asks": 7.0649999999999995,
+        "pressure": 0.664
+      },
+      "ETH": {
+        "bids": 39.979,
+        "asks": 207.964,
+        "pressure": 0.192
+      }
+    }
+  }
+}

@@ -1,0 +1,260 @@
+# 🧠 ALL REPORT — 20251117_2203 UTC
+
+## 🌐 Market Heatmap (CSV)
+
+```csv
+symbol,price,change_24h,volume_24h,market_cap
+BTC,91796.0,-1.40775,96374430380,1831923437327
+ETH,3002.56,-1.63253,41580996161,362576207424
+USDT,0.99897,-0.07617,139011898863,183802872429
+XRP,2.15,-1.7616,6057863358,129065663490
+BNB,901.29,-1.27164,3279324692,124165837804
+USDC,0.999706,-0.00734,15495249288,74966136399
+SOL,130.44,-3.97986,7686813961,72242996321
+TRX,0.290593,-0.23241,1055507656,27510150313
+STETH,3000.21,-1.99013,88115300,25871918504
+DOGE,0.151659,-2.68021,2806265362,22987470156
+ADA,0.460775,-3.80178,1397301595,16863927640
+FIGR_HELOC,1.029,0.85708,13751318,14028277682
+WSTETH,3659.41,-2.34578,29716500,11989329706
+WBTC,91629.0,-1.6668,471783963,11605274410
+WBT,50.98,-1.52949,152395654,10941238970
+WBETH,3253.1,-2.11944,20856496,10601678615
+ZEC,647.97,-3.21832,2382703659,10558591807
+HYPE,38.18,0.91238,425126043,10331681146
+BCH,490.19,2.87461,309554368,9780675047
+USDS,0.999903,-0.01927,24177010,9259188787
+LINK,13.21,-1.98527,898700538,9204099873
+BSC-USD,0.999344,-0.03112,1873183242,8975663256
+LEO,9.16,-0.30567,772494,8428403268
+XLM,0.245701,-2.48839,220339144,7882459361
+WETH,3005.06,-1.59252,262500330,7850602078
+USDE,0.998721,0.0323,301250529,7849051357
+WEETH,3249.8,-1.84233,43080925,7794061292
+XMR,403.19,1.95928,204244544,7438838519
+LTC,91.47,-4.13081,819429231,6988891538
+CBBTC,91750.0,-1.64378,695783893,6755871800
+AVAX,14.4,-2.9405,636356130,6160867608
+HBAR,0.143448,-2.62282,308328780,6070727455
+SUI,1.6,-3.4869,1212177560,5865535076
+SHIB,8.52e-06,-2.65591,155029023,5013642561
+UNI,7.39,4.10215,1393698170,4650007632
+DAI,0.999751,0.02975,127000235,4506172165
+SUSDE,1.2,-0.06234,34645757,4436457350
+TON,1.75,-2.30749,155374958,4359465932
+DOT,2.65,-3.47152,269495893,4324255379
+USDT0,0.998912,-0.02744,262072556,3970061973
+CRO,0.103342,-4.0719,34955096,3849998387
+CC,0.109037,-1.60731,47706989,3834759255
+SUSDS,1.071,-0.68885,16229767,3800638050
+WLFI,0.135261,-3.11259,189424813,3686446177
+M,2.13,-1.47529,19196975,3634166635
+MNT,1.1,-6.38373,100540921,3594777750
+PYUSD,0.999918,0.00185,218968921,3431668792
+TAO,310.18,-1.23106,210463601,2974759590
+ICP,5.35,9.95246,561541044,2893797635
+NEAR,2.19,-2.77653,478247298,2802693500
+```
+
+## 🏦 Market Archive (CSV)
+
+```csv
+section,name,value,extra
+GLOBAL,approx_total_market_cap_usd,3134101395221.0,
+GLOBAL,sample_size,50.0,
+DOMINANCE,BTC,58.45131367225031,%
+DOMINANCE,ETH,11.56874528618858,%
+DOMINANCE,OTHERS,29.979941041561112,%
+TOP_GAINERS,ICP,9.95246,"price=5.35, vol=561541044"
+TOP_GAINERS,UNI,4.10215,"price=7.39, vol=1393698170"
+TOP_GAINERS,BCH,2.87461,"price=490.19, vol=309554368"
+TOP_GAINERS,XMR,1.95928,"price=403.19, vol=204244544"
+TOP_GAINERS,HYPE,0.91238,"price=38.18, vol=425126043"
+TOP_LOSERS,MNT,-6.38373,"price=1.1, vol=100540921"
+TOP_LOSERS,LTC,-4.13081,"price=91.47, vol=819429231"
+TOP_LOSERS,CRO,-4.0719,"price=0.103342, vol=34955096"
+TOP_LOSERS,SOL,-3.97986,"price=130.44, vol=7686813961"
+TOP_LOSERS,ADA,-3.80178,"price=0.460775, vol=1397301595"
+TOP_VOLUME,USDT,-0.07617,"price=0.99897, vol=139011898863"
+TOP_VOLUME,BTC,-1.40775,"price=91796.0, vol=96374430380"
+TOP_VOLUME,ETH,-1.63253,"price=3002.56, vol=41580996161"
+TOP_VOLUME,USDC,-0.00734,"price=0.999706, vol=15495249288"
+TOP_VOLUME,SOL,-3.97986,"price=130.44, vol=7686813961"
+```
+
+# 📊 Per-Symbol Reports (4h + 1d + modules)
+
+---
+## BTC/USDT
+
+### 4h timeframe
+- price: 91822.9
+- rsi14: 25.150330895899117
+- atr14: 1380.7214285714279
+- ema20: 95343.97248032124
+- ema50: 98361.98544963569
+- ema200: 105264.33761872686
+- adx14: 40.208879890442894
+- vpvr_poc: 110735.70208333334 (range 110034.21805555555–111437.1861111111)
+- FVG: 3 gaps detected
+- bb_width: 0.057147469410961715
+- atr_rel: 0.015036787430710944
+- ema_slope: -1.1482830409778064
+- volatility_regime: strong_trend
+- structure: unknown
+- CHOCH: False
+- BOS: False
+- structure_zones: 6
+- key_s_r_levels: [96071.3, 96629.9, 104066.4, 92955.6]
+- trendline_slope_pct: -0.2995385411201047
+- trendline_direction: down
+- liquidity_nodes: 3
+- liquidity_map_top: ['110034.22–111437.19 (14.5%)', '111437.19–112840.15 (14.0%)', '108631.25–110034.22 (9.2%)']
+- volume_climax: False
+- candle_patterns_htf: []
+- crash_risk_score: 40
+- crash_risk_flag: True
+- crash_reasons: ['RSI < 28 (oversold breakdown)', 'BB width > 0.04 (compression → expansion)', 'Bearish FVG detected']
+- corr_btc: 1.0
+- beta_btc: 1.0000000000000002
+- candle: {'open': 91691.4, 'high': 92263.9, 'low': 91300.1, 'close': 91822.9, 'volume': 1892.099865, 'ema20': 95343.97248032124, 'ema50': 98361.98544963569, 'ema200': 105264.33761872686, 'confirmed': False, 'low_volume_flag': False}
+- data_quality: good
+- dist_from_90d_high: -17.0985%
+- dist_from_90d_low: 0.5726%
+
+### 1d timeframe
+- price: 91833.4
+- rsi14: 27.638553632282893
+- atr14: 4527.178571428571
+- ema20: 101796.19906878199
+- ema50: 106991.63353090009
+- ema200: 107291.53328332189
+- adx14: 36.60535096215334
+- dist_from_90d_high: -27.2293%
+- dist_from_90d_low: 0.5841%
+- vpvr_poc: 104156.61041666666 (range 103180.8125–105132.40833333333)
+- FVG: 3 gaps detected
+- bb_width: 0.21814964719109162
+- atr_rel: 0.049297734499959396
+- ema_slope: -3.6575138544573247
+- volatility_regime: strong_trend
+- structure: unknown
+- CHOCH: False
+- BOS: False
+- structure_zones: 5
+- key_s_r_levels: [107533.0, 111236.5, 116400.0, 106434.05]
+- trendline_slope_pct: -0.43236131208876233
+- trendline_direction: down
+- liquidity_nodes: 3
+- liquidity_map_top: ['95115.22–98068.54 (13.2%)', '56722.14–59675.46 (7.8%)', '92161.91–95115.22 (7.5%)']
+- volume_climax: False
+- candle_patterns_htf: []
+- crash_risk_score: 75
+- crash_risk_flag: True
+- crash_reasons: ['RSI < 28 (oversold breakdown)', 'ATR relative > 4.5% (volatility spike)', 'BB width > 0.04 (compression → expansion)', 'EMA20 slope < -2.5% (down momentum)', 'Bearish FVG detected']
+- corr_btc: 0.9999998266273992
+- beta_btc: 0.9999255322797959
+- liquidity_30d: 31048624515.828243
+- dist_from_365d_high: -27.229259363447987%
+- dist_from_365d_low: 23.266308724832207%
+- candle: {'open': 94260.3, 'high': 96071.3, 'low': 91300.1, 'close': 91833.4, 'volume': 14598.709207, 'ema20': 101796.19906878199, 'ema50': 106991.63353090009, 'ema200': 107291.53328332189, 'confirmed': False, 'low_volume_flag': False}
+- data_quality: good
+
+---
+## ETH/USDT
+
+### 4h timeframe
+- price: 3001.73
+- rsi14: 34.01670594676929
+- atr14: 83.70285714285713
+- ema20: 3155.8415213933818
+- ema50: 3274.3447386219623
+- ema200: 3633.4188540227337
+- adx14: 31.974323331609423
+- vpvr_poc: 3886.497222222222 (range 3850.8899999999994–3922.104444444444)
+- FVG: 3 gaps detected
+- bb_width: 0.08435536305800335
+- atr_rel: 0.02788487210470533
+- ema_slope: -1.352263015326705
+- volatility_regime: high_vol
+- structure: unknown
+- CHOCH: False
+- BOS: False
+- structure_zones: 4
+- key_s_r_levels: [3227.57, 3253.62, 3003.74, 3131.64]
+- trendline_slope_pct: -0.36461289746871184
+- trendline_direction: down
+- liquidity_nodes: 3
+- liquidity_map_top: ['4302.94–4375.53 (10.9%)', '4448.12–4520.72 (9.5%)', '3867.4–3939.99 (6.7%)']
+- volume_climax: False
+- candle_patterns_htf: []
+- crash_risk_score: 25
+- crash_risk_flag: False
+- crash_reasons: ['BB width > 0.04 (compression → expansion)', 'Bearish FVG detected']
+- corr_btc: 0.906660500079189
+- beta_btc: 1.675347935467857
+- candle: {'open': 2982.01, 'high': 3027.93, 'low': 2959.29, 'close': 3001.73, 'volume': 25229.89313, 'ema20': 3155.8415213933818, 'ema50': 3274.3447386219623, 'ema200': 3633.4188540227337, 'confirmed': False, 'low_volume_flag': False}
+- data_quality: good
+- dist_from_90d_high: -23.3273%
+- dist_from_90d_low: 1.4341%
+
+### 1d timeframe
+- price: 3001.8
+- rsi14: 31.11539354803267
+- atr14: 260.11571428571443
+- ema20: 3432.660673066888
+- ema50: 3731.6751253702328
+- ema200: 3569.0307811557536
+- adx14: 39.6505861420923
+- dist_from_90d_high: -39.4398%
+- dist_from_90d_low: 1.4365%
+- vpvr_poc: 2682.454722222222 (range 2613.651111111111–2751.258333333333)
+- FVG: 3 gaps detected
+- bb_width: 0.32853179740243116
+- atr_rel: 0.08665324614754961
+- ema_slope: -4.6955527140567765
+- volatility_regime: strong_trend
+- structure: unknown
+- CHOCH: False
+- BOS: False
+- structure_zones: 6
+- key_s_r_levels: [3659.19, 3917.99, 4253.98, 3057.24]
+- trendline_slope_pct: -0.6756793798946007
+- trendline_direction: down
+- liquidity_nodes: 3
+- liquidity_map_top: ['2613.65–2751.26 (14.7%)', '2476.04–2613.65 (11.1%)', '2338.44–2476.04 (8.7%)']
+- volume_climax: False
+- candle_patterns_htf: []
+- crash_risk_score: 60
+- crash_risk_flag: True
+- crash_reasons: ['ATR relative > 4.5% (volatility spike)', 'BB width > 0.04 (compression → expansion)', 'EMA20 slope < -2.5% (down momentum)', 'Bearish FVG detected']
+- corr_btc: 0.8664319715759456
+- beta_btc: 1.6369125112354679
+- liquidity_30d: 16218369590.250875
+- dist_from_365d_high: -39.43979082941945%
+- dist_from_365d_low: 116.76150313393607%
+- candle: {'open': 3095.34, 'high': 3223.51, 'low': 2959.29, 'close': 3001.8, 'volume': 209825.02183, 'ema20': 3432.660673066888, 'ema50': 3731.6751253702328, 'ema200': 3569.0307811557536, 'confirmed': False, 'low_volume_flag': False}
+- data_quality: good
+
+---
+## 🌍 Macro Context
+- DXY: 99.53700256347656 (0.13%)
+- NASDAQ100: 24799.91796875 (-0.83%)
+- US10Y: 4.133000373840332%
+- Fear & Greed: 14 (7d avg: 16.43)
+
+## 📊 Derivatives
+- BTC OI: 99893.264
+- BTC Funding: 9.976e-05
+- BTC L/S Ratio: None
+- ETH OI: 1941984.494
+- ETH Funding: 8.017e-05
+- ETH L/S Ratio: None
+
+## 🔗 On-chain Flow
+- BTC Netflow: -41280.36051515701
+- ETH Netflow: -831937.7674458877
+
+## 🧭 Orderbook Pressure
+- BTC: {'bids': 2.758, 'asks': 20.708, 'pressure': 0.133}
+- ETH: {'bids': 222.262, 'asks': 48.869, 'pressure': 4.548}

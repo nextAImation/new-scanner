@@ -6,6 +6,14 @@ import requests, ccxt, pandas as pd, numpy as np, yfinance as yf
 from dotenv import load_dotenv
 load_dotenv()
 
+
+def safe_call(fn, default=None):
+    try:
+        return fn()
+    except Exception as e:
+        print(f"[ERROR] {fn.__name__}: {e}")
+        return default
+
 # === IMPORT NEW MODULES ===
 try:
     from modules.velocity import compute_velocity_signal
@@ -382,7 +390,7 @@ def detect_fvg(df):
                         "type": "bullish",
                         "start": float(df["high"].iloc[i - 2]),
                         "end": float(df["low"].iloc[i]),
-                        "time": df.index[i].strftime("%Y-%m-%d"),
+                        "time": str(df.index[i]),
                     }
                 )
             if df["high"].iloc[i] < df["low"].iloc[i - 2]:
@@ -391,7 +399,7 @@ def detect_fvg(df):
                         "type": "bearish",
                         "start": float(df["low"].iloc[i - 2]),
                         "end": float(df["high"].iloc[i]),
-                        "time": df.index[i].strftime("%Y-%m-%d"),
+                        "time": str(df.index[i]),
                     }
                 )
         except IndexError:
@@ -502,6 +510,7 @@ def build_structure_zones_from_swings(swings, tolerance_pct=0.5, max_zones=6):
         zones.extend(_cluster(highs, "resistance"))
     if lows:
         zones.extend(_cluster(lows, "support"))
+    zones = [z for z in zones if z.get("level") is not None]
     return zones
 
 def compute_trendline_slope(series: pd.Series, window: int = 50):
@@ -517,6 +526,9 @@ def compute_trendline_slope(series: pd.Series, window: int = 50):
 
     y = s.values
     x = np.arange(len(y))
+
+    if y.mean() == 0 or np.isnan(y).any():
+        return None, "unknown"
 
     try:
         coef = np.polyfit(x, y, 1)
@@ -539,6 +551,9 @@ def liquidity_map_from_vpvr(df: pd.DataFrame, bins: int = 24, top_n: int = 3):
     """
     if df is None or len(df) < 20:
         return []
+
+    if df["volume"].isna().any():
+        df = df.fillna(method="ffill").fillna(0)
 
     px = (df["high"] + df["low"] + df["close"]) / 3
     vol = df["volume"]
@@ -633,23 +648,23 @@ def compute_crash_risk(
     score = 0
     reasons = []
 
-    if rsi is not None and rsi < 28:
+    if rsi is not None and not pd.isna(rsi) and rsi < 28:
         score += 15
         reasons.append("RSI < 28 (oversold breakdown)")
 
-    if adx is not None and adx < 15:
+    if adx is not None and not pd.isna(adx) and adx < 15:
         score += 10
         reasons.append("ADX < 15 (weak trend, vulnerable)")
 
-    if atr_rel is not None and atr_rel > 0.045:
+    if atr_rel is not None and not pd.isna(atr_rel) and atr_rel > 0.045:
         score += 20
         reasons.append("ATR relative > 4.5% (volatility spike)")
 
-    if bb_width is not None and bb_width > 0.04:
+    if bb_width is not None and not pd.isna(bb_width) and bb_width > 0.04:
         score += 15
         reasons.append("BB width > 0.04 (compression → expansion)")
 
-    if ema_slope is not None and ema_slope < -2.5:
+    if ema_slope is not None and not pd.isna(ema_slope) and ema_slope < -2.5:
         score += 15
         reasons.append("EMA20 slope < -2.5% (down momentum)")
 
@@ -663,7 +678,7 @@ def compute_crash_risk(
 
     if liquidity_map and len(liquidity_map) > 0:
         biggest = liquidity_map[0]["volume_share_pct"]
-        if biggest < 7:
+        if biggest is not None and not pd.isna(biggest) and biggest < 7:
             score += 10
             reasons.append("Weak liquidity nodes (vacuum)")
 
@@ -1289,53 +1304,51 @@ def analyze_timeframe_from_df(
         (price_for_dev - low_90d) / low_90d * 100, 4
     )
 
+    ribbon_alignment = "mixed"
+    if last.get("ema20") and last.get("ema50") and last.get("ema200"):
+        if last["ema20"] > last["ema50"] > last["ema200"]:
+            ribbon_alignment = "bullish"
+        elif last["ema20"] < last["ema50"] < last["ema200"]:
+            ribbon_alignment = "bearish"
+
+    momentum_summary = {
+        "rsi14": float(last["rsi14"]) if not pd.isna(last["rsi14"]) else None,
+        "adx14": float(last["adx14"]) if not pd.isna(last["adx14"]) else None,
+        "ema_slope_pct": float(ema_slope) if ema_slope is not None else None,
+    }
+
+    range_state = "unknown"
+    if bbw is not None and not pd.isna(bbw):
+        if bbw < 0.012 and (last.get("adx14") or 0) < 18:
+            range_state = "ranging"
+        elif bbw > 0.035:
+            range_state = "expanding"
+
+    volume_profile_detail = {
+        "poc": float(poc) if poc is not None else None,
+        "value_area_low": float(v_low) if v_low is not None else None,
+        "value_area_high": float(v_high) if v_high is not None else None,
+    }
+
+    structure_distances = pivot_distances
+    latest_swings_prices = {"last_high": last_high, "last_low": last_low}
+
     # === INTEGRATE NEW MODULES ===
     if MODULES_AVAILABLE:
-        try:
-            # Velocity
-            velocity_signal = compute_velocity_signal(df)
-            out["velocity"] = velocity_signal
-            
-            # Trend Quality
-            trend_quality = trend_quality_score(df)
-            out["trend_quality"] = trend_quality
-            
-            # Liquidity Engine
-            liquidity_heatmap = compute_liquidity_heatmap(df)
-            out["liquidity_heatmap"] = liquidity_heatmap
-            
-            # Market Phase
-            market_phase = detect_market_phase(df)
-            out["market_phase"] = market_phase
-            
-            # Risk Structure
-            risk_structure = risk_structure_score(df)
-            out["risk_structure"] = risk_structure
-            
-            # SR Reliability
-            sr_reliability = compute_sr_reliability(df)
-            out["sr_reliability"] = sr_reliability
-            
-            # Compression
-            compression_signal = compute_compression_signal(df)
-            out["compression"] = compression_signal
-            
-            # Dollar Volume
-            dollar_volume = compute_dollar_volume(df)
-            out["dollar_volume"] = dollar_volume
-            
-        except Exception as e:
-            print(f"⚠️ Error in new modules for {symbol} {timeframe}: {e}")
+        out["velocity"] = safe_call(lambda: compute_velocity_signal(df))
+        out["trend_quality"] = safe_call(lambda: trend_quality_score(df))
+        out["liquidity_heatmap"] = safe_call(lambda: compute_liquidity_heatmap(df))
+        out["market_phase"] = safe_call(lambda: detect_market_phase(df))
+        out["risk_structure"] = safe_call(lambda: risk_structure_score(df))
+        out["sr_reliability"] = safe_call(lambda: compute_sr_reliability(df))
+        out["compression"] = safe_call(lambda: compute_compression_signal(df))
+        out["dollar_volume"] = safe_call(lambda: compute_dollar_volume(df))
     else:
         print(f"⚠️ New modules not available for {symbol} {timeframe}")
 
     # Breadth (only for daily timeframe)
     if timeframe in ("1d", "1D", "D") and MODULES_AVAILABLE:
-        try:
-            breadth_summary = compute_breadth_summary(df)
-            out["breadth"] = breadth_summary
-        except Exception as e:
-            print(f"⚠️ Error in breadth module for {symbol} {timeframe}: {e}")
+        out["breadth"] = safe_call(lambda: compute_breadth_summary(df))
 
     out.update(
         {
@@ -1350,6 +1363,12 @@ def analyze_timeframe_from_df(
             "vpvr_low": float(v_low) if v_low is not None else None,
             "vpvr_high": float(v_high) if v_high is not None else None,
             "fvg": fvg_list,
+            "ma_ribbon": {
+                "ema20": float(last["ema20"]) if not pd.isna(last["ema20"]) else None,
+                "ema50": float(last["ema50"]) if not pd.isna(last["ema50"]) else None,
+                "ema200": float(last["ema200"]) if not pd.isna(last["ema200"]) else None,
+                "alignment": ribbon_alignment,
+            },
             "candle": {
                 "open": float(last["open"]),
                 "high": float(last["high"]),
@@ -1376,7 +1395,11 @@ def analyze_timeframe_from_df(
                 "ema_slope": float(ema_slope) if ema_slope is not None else None,
                 "regime": regime,
                 "volume_climax": bool(volume_climax),
+                "volatility_label": regime,
             },
+            "momentum": momentum_summary,
+            "range_detector": {"state": range_state},
+            "volume_profile": volume_profile_detail,
             "structure": {
                 "last_swings": [
                     {
@@ -1390,6 +1413,8 @@ def analyze_timeframe_from_df(
                 "choch": choch,
                 "bos": bos,
                 "pivot_distances": pivot_distances,
+                "structure_distances": structure_distances,
+                "latest_swing_prices": latest_swings_prices,
             },
             "structure_zones": structure_zones,
             "trendline": {"slope_pct": trend_slope_val, "direction": trend_slope_label},
@@ -1423,6 +1448,7 @@ def analyze_timeframe_from_df(
         print(
             f"[CORR DEBUG] symbol={symbol}, timeframe={timeframe} → btc_df is None or empty → skip corr_beta"
         )
+        out["correlation"] = {"with_btc": None, "beta_vs_btc": None}
     else:
         print(
             f"[CORR DEBUG] ENTER corr_beta | symbol={symbol}, timeframe={timeframe}, len(df)={len(df)}, len(btc_df)={len(btc_df)}"
@@ -1466,23 +1492,10 @@ def save_report(data, ctx, out_dir):
     """
     import pandas as pd
 
-    # Generate / refresh market CSVs with offline fallback
+    # Prepare market file paths (generation deferred to maintain execution order)
     heatmap_csv_path = "market_heatmap.csv"
     archive_csv_path = "market_archive.csv"
     archive_json_path = "market_archive.json"
-    try:
-        generate_market_csv(heatmap_csv_path)
-    except Exception as e:
-        print(f"⚠️ Heatmap generation failed, using cached file if available: {e}")
-
-    try:
-        archive_csv_path, archive_json_path = generate_market_archive(
-            heatmap_csv=heatmap_csv_path,
-            archive_csv=archive_csv_path,
-            archive_json=archive_json_path,
-        )
-    except Exception as e:
-        print(f"⚠️ Market archive generation failed, using cached files if available: {e}")
 
     # -------- PREP --------
     os.makedirs(out_dir, exist_ok=True)
@@ -1577,11 +1590,17 @@ def save_report(data, ctx, out_dir):
     md.append(f"- ema50: {g(d4, 'ema50')}")
     md.append(f"- ema200: {g(d4, 'ema200')}")
     md.append(f"- adx14: {g(d4, 'adx14')}")
+    marib4 = (d4.get("ma_ribbon") or {}).get("alignment", "-")
+    md.append(f"- ma_ribbon_alignment: {marib4}")
 
     if "vpvr_poc" in d4 or "vpvr_low" in d4 or "vpvr_high" in d4:
         md.append(
             f"- vpvr_poc: {g(d4, 'vpvr_poc')} (range {g(d4, 'vpvr_low')}–{g(d4, 'vpvr_high')})"
         )
+    vp_det4 = d4.get("volume_profile") or {}
+    md.append(
+        f"- volume_profile_detail: poc={g(vp_det4, 'poc')}, val={g(vp_det4, 'value_area_low')}–{g(vp_det4, 'value_area_high')}"
+    )
 
     fvg4 = d4.get("fvg", []) or []
     if fvg4:
@@ -1592,11 +1611,24 @@ def save_report(data, ctx, out_dir):
     md.append(f"- atr_rel: {g(vol4, 'atr_rel')}")
     md.append(f"- ema_slope: {g(vol4, 'ema_slope')}")
     md.append(f"- volatility_regime: {vol4.get('regime', '-')}")
+    md.append(f"- volatility_label: {vol4.get('volatility_label', '-')}")
+    momentum4 = d4.get("momentum", {}) or {}
+    md.append(
+        f"- momentum_summary: rsi={g(momentum4, 'rsi14')}, adx={g(momentum4, 'adx14')}, ema_slope_pct={g(momentum4, 'ema_slope_pct')}"
+    )
+    range4 = (d4.get("range_detector") or {}).get("state", "-")
+    md.append(f"- range_detector: {range4}")
 
     struct4 = d4.get("structure", {}) or {}
     md.append(f"- structure: {struct4.get('tag', '-')}")
     md.append(f"- CHOCH: {struct4.get('choch', False)}")
     md.append(f"- BOS: {struct4.get('bos', False)}")
+    md.append(
+        f"- structure_distances: {struct4.get('structure_distances', {})}"
+    )
+    md.append(
+        f"- latest_swing_prices: {struct4.get('latest_swing_prices', {})}"
+    )
 
     zones4 = d4.get("structure_zones", []) or []
     trend4 = d4.get("trendline", {}) or {}
@@ -1649,6 +1681,10 @@ def save_report(data, ctx, out_dir):
     md.append(f"- beta_btc: {g(corr4, 'beta_vs_btc')}")
 
     md.append(f"- candle: {gcandle(d4)}")
+    md.append(f"- candle_confirmed: {d4.get('candle', {}).get('confirmed', '-')}")
+    md.append(
+        f"- candle_low_volume_flag: {d4.get('candle', {}).get('low_volume_flag', '-') }"
+    )
     md.append(f"- data_quality: {d4.get('data_quality', {}).get('status', '-')}")
     md.append(f"- dist_from_90d_high: {g(d4, 'dist_from_90d_high_pct')}%")
     md.append(f"- dist_from_90d_low: {g(d4, 'dist_from_90d_low_pct')}%\n")
@@ -1664,11 +1700,17 @@ def save_report(data, ctx, out_dir):
     md.append(f"- adx14: {g(d1, 'adx14')}")
     md.append(f"- dist_from_90d_high: {g(d1, 'dist_from_90d_high_pct')}%")
     md.append(f"- dist_from_90d_low: {g(d1, 'dist_from_90d_low_pct')}%")
+    marib1 = (d1.get("ma_ribbon") or {}).get("alignment", "-")
+    md.append(f"- ma_ribbon_alignment: {marib1}")
 
     if "vpvr_poc" in d1:
         md.append(
             f"- vpvr_poc: {g(d1, 'vpvr_poc')} (range {g(d1, 'vpvr_low')}–{g(d1, 'vpvr_high')})"
         )
+    vp_det1 = d1.get("volume_profile") or {}
+    md.append(
+        f"- volume_profile_detail: poc={g(vp_det1, 'poc')}, val={g(vp_det1, 'value_area_low')}–{g(vp_det1, 'value_area_high')}"
+    )
 
     fvg1 = d1.get("fvg", [])
     if fvg1:
@@ -1679,11 +1721,24 @@ def save_report(data, ctx, out_dir):
     md.append(f"- atr_rel: {g(vol1, 'atr_rel')}")
     md.append(f"- ema_slope: {g(vol1, 'ema_slope')}")
     md.append(f"- volatility_regime: {vol1.get('regime', '-')}")
+    md.append(f"- volatility_label: {vol1.get('volatility_label', '-')}")
+    momentum1 = d1.get("momentum", {}) or {}
+    md.append(
+        f"- momentum_summary: rsi={g(momentum1, 'rsi14')}, adx={g(momentum1, 'adx14')}, ema_slope_pct={g(momentum1, 'ema_slope_pct')}"
+    )
+    range1 = (d1.get("range_detector") or {}).get("state", "-")
+    md.append(f"- range_detector: {range1}")
 
     struct1 = d1.get("structure", {}) or {}
     md.append(f"- structure: {struct1.get('tag', '-')}")
     md.append(f"- CHOCH: {struct1.get('choch', False)}")
     md.append(f"- BOS: {struct1.get('bos', False)}")
+    md.append(
+        f"- structure_distances: {struct1.get('structure_distances', {})}"
+    )
+    md.append(
+        f"- latest_swing_prices: {struct1.get('latest_swing_prices', {})}"
+    )
 
     zones1 = d1.get("structure_zones", []) or []
     trend1 = d1.get("trendline", {}) or {}
@@ -1743,6 +1798,10 @@ def save_report(data, ctx, out_dir):
     md.append(f"- dist_from_365d_low: {g(dev1, 'from_365d_low_pct')}%")
 
     md.append(f"- candle: {gcandle(d1)}")
+    md.append(f"- candle_confirmed: {d1.get('candle', {}).get('confirmed', '-')}")
+    md.append(
+        f"- candle_low_volume_flag: {d1.get('candle', {}).get('low_volume_flag', '-') }"
+    )
     md.append(f"- data_quality: {d1.get('data_quality', {}).get('status', '-')}\n")
 
     # MACRO
@@ -1791,7 +1850,21 @@ def save_report(data, ctx, out_dir):
     md.append(f"- BTC: {ob.get('BTC')}")
     md.append(f"- ETH: {ob.get('ETH')}\n")
 
-    # MARKET CSV + ARCHIVE
+    # MARKET CSV + ARCHIVE (generate after report build order)
+    try:
+        heatmap_csv_path = generate_market_csv(heatmap_csv_path) or heatmap_csv_path
+    except Exception as e:
+        print(f"⚠️ Heatmap generation failed, using cached file if available: {e}")
+
+    try:
+        archive_csv_path, archive_json_path = generate_market_archive(
+            heatmap_csv=heatmap_csv_path or "market_heatmap.csv",
+            archive_csv=archive_csv_path,
+            archive_json=archive_json_path,
+        )
+    except Exception as e:
+        print(f"⚠️ Market archive generation failed, using cached files if available: {e}")
+
     md.append("\n---\n## 📈 Market Heatmap (CSV)")
     md.append(load_market_csv_summary(heatmap_csv_path))
 
@@ -1805,7 +1878,14 @@ def save_report(data, ctx, out_dir):
         f.write(md_text)
 
     json_path = os.path.join(out_dir, f"{safe_sym}_{ts}.json")
-    payload = {"symbol": sym, "timeframes": {"4h": d4, "1d": d1}, "context": ctx or {}}
+    payload = {
+        "symbol": sym,
+        "timeframes": {"4h": d4, "1d": d1},
+        "context": ctx or {},
+        "market_heatmap_csv": heatmap_csv_path,
+        "market_archive_csv": archive_csv_path,
+        "market_archive_json": archive_json_path,
+    }
     with open(json_path, "w", encoding="utf-8") as f:
         json.dump(payload, f, indent=2, ensure_ascii=False)
 

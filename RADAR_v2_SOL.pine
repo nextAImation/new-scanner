@@ -355,8 +355,8 @@ if swingL
 bos_up = not na(ms_lastHH) and high > ms_lastHH
 bos_dn = not na(ms_lastLL) and low < ms_lastLL
 
-bos_ok_long = bos_up
-bos_ok_short = bos_dn
+bos_ok_long = not bos_dn
+bos_ok_short = not bos_up
 
 // 2) Liquidity Sweep Detection
 swingHighPrice = swingH ? high : na
@@ -418,11 +418,8 @@ if not na(bearObHigh)
 
 breakerShort = bearObInvalidated and not na(bearObHigh) and close < bearObHigh and high >= bearObHigh
 
-bullObActive = not na(bullObLow) and not bullObInvalidated
-bearObActive = not na(bearObHigh) and not bearObInvalidated
-
-ob_ok_long  = bullOB or breakerLong or bullObActive or na(bullObLow)
-ob_ok_short = bearOB or breakerShort or bearObActive or na(bearObHigh)
+ob_ok_long  = bullOB or breakerLong
+ob_ok_short = bearOB or breakerShort
 
 // 5) ATR Regimes
 atrNorm = safe_div(atr, ta.sma(atr, 50))
@@ -435,9 +432,21 @@ atr_ok_short = not lowVol
 // =============================================================================
 // FINAL FILTER ATTACHMENT
 // =============================================================================
-shouldLongNow := shouldLongNow and bos_ok_long and liq_ok_long and fvg_ok_long and ob_ok_long and atr_ok_long
+shouldLongNow :=
+    shouldLongNow
+    and bos_ok_long
+    and liq_ok_long
+    and fvg_ok_long
+    and ob_ok_long
+    and atr_ok_long
 
-shouldShortNow := shouldShortNow and bos_ok_short and liq_ok_short and fvg_ok_short and ob_ok_short and atr_ok_short
+shouldShortNow :=
+    shouldShortNow
+    and bos_ok_short
+    and liq_ok_short
+    and fvg_ok_short
+    and ob_ok_short
+    and atr_ok_short
 /// =============================================================================
 // DEBUG LABEL: WHY NO LONG? - ONLY ON IMPORTANT BARS
 // =============================================================================

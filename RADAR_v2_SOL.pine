@@ -1,0 +1,695 @@
+//@version=5
+strategy("RADAR v2.0 — SOL", overlay=true, initial_capital=10000, 
+     commission_type=strategy.commission.percent, commission_value=0.06, 
+     max_bars_back=5000, pyramiding=0, 
+     max_labels_count=500, max_lines_count=500)  // افزایش به 2000
+
+// ───────── DATA INTEGRITY SENTINEL ─────────
+useDataSentinel   = input.bool(true, "🔧 Enable Data Integrity Sentinel")
+enableFallback    = input.bool(true, "Use Fallback Data Source")
+maxDataGap        = input.int(5, "Max Allowed Data Gap (bars)", minval=1, maxval=20)
+alertOnDataIssue  = input.bool(true, "Alert on Data Issues")
+
+security_reliable(_ticker, _timeframe, _src, _lookahead = barmerge.lookahead_off) =>
+    var string _error_msg = na
+    var int _retry_count = 0
+    primary_data  = request.security(_ticker, _timeframe, _src, lookahead=_lookahead)
+    primary_ok    = not na(primary_data) and primary_data != 0 and not na(primary_data[1])
+    fallback_data = enableFallback ? request.security(_ticker, _timeframe, _src, gaps=barmerge.gaps_off, lookahead=_lookahead) : primary_data
+    fallback_ok   = not na(fallback_data) and fallback_data != 0
+    reliable_data = primary_ok ? primary_data : (fallback_ok ? fallback_data : na)
+    if not primary_ok and useDataSentinel
+        if barstate.islast
+            _error_msg := "Data issue: " + _ticker + " @" + _timeframe
+    reliable_data
+
+check_data_gap(_src, _max_gap) =>
+    gap_detected = false
+    gap_size = 0
+    for i = 1 to _max_gap
+        if na(_src[i]) and not na(_src[i+1])
+            gap_detected := true
+            gap_size := i
+            break
+    [gap_detected, gap_size]
+
+var data_quality_state = array.new_int(2, 0)
+monitor_data_quality(_price, _volume, _timestamp) =>
+    price_ok = not na(_price) and _price > 0
+    volume_ok = not na(_volume) and _volume >= 0
+    time_ok = not na(_timestamp) and _timestamp > 0
+    [price_gap, gap_size] = check_data_gap(_price, maxDataGap)
+    current_issues = not price_ok or not volume_ok or not time_ok or price_gap
+    if current_issues and useDataSentinel
+        array.set(data_quality_state, 0, array.get(data_quality_state, 0) + 1)
+        last_alert = array.get(data_quality_state, 1)
+        if alertOnDataIssue and (na(last_alert) or bar_index - last_alert > 100)
+            array.set(data_quality_state, 1, bar_index)
+            alert("🚨 Data Quality Issue", freq=alert.freq_once_per_bar)
+
+if useDataSentinel and barstate.islast
+    label.new(bar_index, low, "🔧 DATA SENTINEL\nACTIVE",
+              style=label.style_label_up, color=color.new(color.green, 0),
+              textcolor=color.white, size=size.small)
+
+// ───────── STRATEGY INPUTS ─────────
+maType       = input.string("EMA", "MA Type", options=["EMA","TEMA","HMA","SMA"])
+maFastLen    = input.int(20,  "Fast MA Len",  minval=1)
+maSlowLen    = input.int(50,  "Slow MA Len",  minval=1)
+maRegLen     = input.int(200, "Regime MA Len",minval=1)
+
+adxLen       = input.int(14,  "ADX Length",   minval=2)
+adxThFixed   = input.float(22, "ADX Threshold (fixed)")
+useDynADX    = input.bool(false, "Use Dynamic ADX? (SMA(30)*K)")
+adxDynK      = input.float(0.90, "Dynamic ADX K", step=0.01, minval=0.5, maxval=1.5)
+requireAdxUp = input.bool(true,  "Require ADX Rising?")
+
+useRSI       = input.bool(true, "Use RSI filter?")
+rsiLen       = input.int(14,  "RSI Length",   minval=2)
+rsiThLong    = input.float(48, "RSI Th Long")
+
+useVol       = input.bool(true, "Use Volume filter?")
+volLen       = input.int(20, "Volume SMA Length", minval=1)
+volKLong     = input.float(0.7, "Vol k (L/S)",  step=0.05, minval=0.2, maxval=3.0)
+
+atrLen       = input.int(14,  "ATR Length",   minval=1)
+atrMultSL    = input.float(2.0,"SL Multiplier (×ATR)", step=0.1, minval=0.5, maxval=10)
+atrMultTP    = input.float(3.0,"TP Multiplier (×ATR)", step=0.1, minval=0.5, maxval=20)
+riskPct      = input.float(0.026,"Risk Capital (fraction of equity)", step=0.001, minval=0.001, maxval=0.05)
+
+useTrendFilter = input.bool(true,  "Use Daily Trend Filter?")
+dailySoftK     = input.float(1.00, "Daily Soft Factor", step=0.01, minval=0.90, maxval=1.05)
+useRegimeFilter = input.bool(true, "Use EMA200 Regime Filter?")
+
+useCooldown  = input.bool(true, "Use Cooldown?")
+coolDownBars = input.int(6, "Cooldown Bars", minval=1, maxval=100)
+
+useEarlyEntry   = input.bool(false, "Enable Early Entry (partial)?")
+earlyRSI_Long   = input.float(55, "Early RSI > (Long)", step=0.5, minval=0, maxval=100)
+earlyRSI_Short  = input.float(45, "Early RSI < (Short)", step=0.5, minval=0, maxval=100)
+earlyADX        = input.float(18, "Early ADX >", step=0.5, minval=0, maxval=100)
+earlyQtyFrac    = input.float(0.25,"Early Qty Fraction", step=0.05, minval=0.05, maxval=0.5)
+
+useCrossEntry   = input.bool(false, "Allow EMA20/50 Cross as Entry?")
+crossNeedADX    = input.bool(true,  "Cross must pass ADX?")
+crossNeedDaily  = input.bool(true,  "Cross must pass Daily Filter?")
+crossNeedRegime = input.bool(false, "Cross must pass Regime (EMA200)?")
+
+// =============================================================================
+// MARKET STRUCTURE INPUTS
+// =============================================================================
+useStruct         = input.bool(true, "🔧 Enable Market Structure Filter")
+swingLen          = input.int(5, "Swing Length", minval=3, maxval=7)
+bosBufAtr         = input.float(0.30, "BOS ATR Buffer", minval=0.1, maxval=0.5, step=0.05)
+useChochSoft      = input.bool(false, "Enable Soft CHOCH Warning")
+strictShort       = input.bool(true, "Always Strict for Shorts")
+adxSoftStrict     = input.bool(true, "Dynamic ADX-based Gating")
+
+// =============================================================================
+// NEW OPTIMIZATION INPUTS
+// =============================================================================
+tp2TrailAtrL = input.float(2.4, "TP2 Trail ATR (Long)",  minval=1.0, maxval=4.0, step=0.1)
+tp2TrailAtrS = input.float(1.8, "TP2 Trail ATR (Short)", minval=1.0, maxval=4.0, step=0.1)
+
+beBuf = input.float(0.30, "BE buffer in ATR", minval=0.0, maxval=1.0, step=0.05)
+weakConfirmBars = input.int(2, "ExitWeak confirm bars", minval=1)
+
+// --- helper MAs
+tema(src, len) =>
+    ema1 = ta.ema(src, len)
+    ema2 = ta.ema(ema1, len)
+    ema3 = ta.ema(ema2, len)
+    3.0 * (ema1 - ema2) + ema3
+
+ma_select(src, len, type) =>
+    if   type == "EMA"
+        ta.ema(src, len)
+    else if type == "TEMA"
+        tema(src, len)
+    else if type == "HMA"
+        ta.hma(src, len)
+    else
+        ta.sma(src, len)
+
+safe_div(numer, denom) =>
+    denom == 0 or na(denom) ? 0.0 : (numer / denom)
+
+trail_up(prev, candidate) =>
+    na(prev) ? candidate : math.max(prev, candidate)
+
+trail_down(prev, candidate) =>
+    na(prev) ? candidate : math.min(prev, candidate)
+
+// ───────── INDICATORS ─────────
+monitor_data_quality(close, volume, time)
+
+fastMA = ma_select(close, maFastLen, maType)
+slowMA = ma_select(close, maSlowLen, maType)
+regMA  = ma_select(close, maRegLen,  maType)
+
+[diplus, diminus, adxRaw] = ta.dmi(adxLen, adxLen)
+adxS = ta.sma(adxRaw, 3)
+adxBase = useDynADX ? (ta.sma(adxRaw, 30) * adxDynK) : adxThFixed
+
+rsi     = ta.rsi(close, rsiLen)
+volMA   = ta.sma(volume, volLen)
+volRatio = safe_div(volume, volMA)
+atr     = ta.atr(atrLen)
+
+// Daily filter
+d20_reliable = security_reliable(syminfo.tickerid, "D", ta.ema(close, 20))
+d50_reliable = security_reliable(syminfo.tickerid, "D", ta.ema(close, 50))
+dailyUp   = not na(d20_reliable) and not na(d50_reliable) and d20_reliable > (d50_reliable * dailySoftK)
+dailyDown = not na(d20_reliable) and not na(d50_reliable) and d20_reliable < (d50_reliable / dailySoftK)
+trendFilterLongOK  = not useTrendFilter or dailyUp
+trendFilterShortOK = not useTrendFilter or dailyDown
+
+// Cooldown
+var int  lastExitBar = na
+justClosed = ta.change(strategy.closedtrades) > 0
+if justClosed
+    lastExitBar := bar_index
+inCooldown = useCooldown and not na(lastExitBar) and (bar_index - lastExitBar) < coolDownBars
+canTrade   = not inCooldown
+
+powerOk() =>
+    ok = adxS > adxBase
+    requireAdxUp ? (ok and adxS > adxS[1]) : ok
+
+// TP/BE/TRAIL settings
+tp1Ratio     = input.float(1.6, "TP1 Ratio (×R)", step=0.1, minval=0.5, maxval=5)
+useBreakEven = input.bool(true, "Use Break-Even after TP1?")
+tp1Pct       = input.int(32, "TP1 Qty % (reduce)", minval=1, maxval=90)
+
+// =============================================================================
+// REFINED MARKET STRUCTURE MODULE (AFTER ALL INDICATORS)
+// =============================================================================
+// State Variables
+var int structState = 0
+var float lastHH = na
+var float lastLL = na  
+var float lastHL = na
+var float lastLH = na
+var bool chochWarning = false
+
+// Pivot Detection (confirmed, no repaint)
+ph = ta.pivothigh(high, swingLen, swingLen)
+pl = ta.pivotlow(low, swingLen, swingLen)
+
+// Update Swing Extremes
+if not na(ph)
+    lastHH := ph
+    if structState == -1
+        lastLH := ph
+if not na(pl)
+    lastLL := pl  
+    if structState == 1
+        lastHL := pl
+
+// Dynamic ADX-based Gating
+adxThreshold = 25  // ADX level for trend vs range detection
+adxLow = adxS < adxThreshold
+
+// Adaptive BOS Buffer based on ADX regime
+bufMultiplier = adxLow ? 1.4 : 0.8  // Higher buffer in low ADX
+bosBuf = bosBufAtr * atr * bufMultiplier
+
+// BOS Logic with adaptive buffer
+bosUp = not na(lastHH) and close > lastHH + bosBuf
+bosDn = not na(lastLL) and close < lastLL - bosBuf
+
+// State Transitions (persistent after BOS)
+if bosUp
+    structState := 1
+    lastHL := na
+if bosDn  
+    structState := -1
+    lastLH := na
+
+// Soft CHOCH (Warning Only)
+chochUp = not na(lastHL) and close < lastHL
+chochDn = not na(lastLH) and close > lastLH
+chochWarning := useChochSoft and (chochUp or chochDn)
+
+// Dynamic ADX-based Gating
+strictLongCondition = adxSoftStrict and adxLow
+strictShortCondition = strictShort or (adxSoftStrict and adxLow)
+
+struct_ok_long = not useStruct or (strictLongCondition ? structState == 1 : structState >= 0)
+struct_ok_short = not useStruct or (strictShortCondition ? structState == -1 : structState <= 0)
+
+// =============================================================================
+// STATE VARS
+// =============================================================================
+var float entryPriceL = na
+var float entryPriceS = na
+var bool  tp1HitL = false
+var bool  tp1HitS = false
+var float dynStopL = na
+var float dynStopS = na
+var float atrAtEntryL = na
+var float atrAtEntryS = na
+var bool  initedL = false
+var bool  initedS = false
+
+// ───────── LOGIC ─────────
+trendLong   = fastMA > slowMA
+regimeLong  = trendLong and (not useRegimeFilter or close > regMA)
+dirLong     = diplus > diminus
+rsiLongOk   = not useRSI or (rsi > rsiThLong)
+volOk       = not useVol  or (volRatio > volKLong)
+
+trendShort   = fastMA < slowMA
+regimeShort  = trendShort and (not useRegimeFilter or close < regMA)
+dirShort     = diminus > diplus
+rsiShortOk   = not useRSI or (rsi < (100 - rsiThLong))
+volShortOk   = not useVol  or (volRatio > volKLong)
+
+// --- RR Gate
+rr_ok_long  = tp1Ratio >= 1.6
+rr_ok_short = tp1Ratio >= 1.6
+
+breakoutLong  = regimeLong  and powerOk() and dirLong and rsiLongOk and volOk and trendFilterLongOK  and (close > fastMA) and (close > slowMA) and canTrade and rr_ok_long
+pullbackLong  = regimeLong  and powerOk() and dirLong and rsiLongOk and volOk and trendFilterLongOK  and (low <= fastMA and close > fastMA) and canTrade and rr_ok_long
+earlyLong     = useEarlyEntry and canTrade and (fastMA > slowMA) and (rsi > earlyRSI_Long) and (adxS > earlyADX) and trendFilterLongOK
+
+// شورت‌ها: گارد ADX سخت‌تر
+guardShort   = adxS > (adxBase + 1.5)
+breakoutShort = regimeShort and powerOk() and dirShort and rsiShortOk and volShortOk and trendFilterShortOK and (close < fastMA) and (close < slowMA) and canTrade and rr_ok_short and guardShort
+pullbackShort = regimeShort and powerOk() and dirShort and rsiShortOk and volShortOk and trendFilterShortOK and (high >= fastMA and close < fastMA) and canTrade and rr_ok_short and guardShort
+earlyShort    = useEarlyEntry and canTrade and (fastMA < slowMA) and (rsi < earlyRSI_Short) and (adxS > earlyADX) and trendFilterShortOK and guardShort
+
+// Cross entry
+crossUp   = ta.crossover(fastMA, slowMA)
+crossDown = ta.crossunder(fastMA, slowMA)
+crossLongOK  = useCrossEntry and crossUp   and (not crossNeedADX or powerOk()) and (not crossNeedDaily or trendFilterLongOK)  and (not crossNeedRegime or (close > regMA)) and canTrade and rr_ok_long
+crossShortOK = useCrossEntry and crossDown and (not crossNeedADX or powerOk()) and (not crossNeedDaily or trendFilterShortOK) and (not crossNeedRegime or (close < regMA)) and canTrade and rr_ok_short and guardShort
+
+/// =============================================================================
+// DAILY BIAS FOR BYPASS FILTERING - INTEGRATED VERSION
+// =============================================================================
+
+// Daily bias (ساده و کم‌هزینه) - استفاده از تابع security_reliable موجود
+d20_bias = security_reliable(syminfo.tickerid, "D", ta.ema(close, 20))
+d50_bias = security_reliable(syminfo.tickerid, "D", ta.ema(close, 50))
+dBias = na(d20_bias) or na(d50_bias) ? 0 : (d20_bias > d50_bias ? 1 : d20_bias < d50_bias ? -1 : 0)
+
+// BOS سبک روزانه با رولینگ سقف/کف + بافر ATR روزانه
+atrD   = security_reliable(syminfo.tickerid, "D", ta.atr(14))
+rollHH_D = security_reliable(syminfo.tickerid, "D", ta.highest(high, math.round(swingLen * 1.5)))[1]
+rollLL_D = security_reliable(syminfo.tickerid, "D", ta.lowest(low, math.round(swingLen * 1.5)))[1]
+bufD = nz(atrD) * bosBufAtr
+dBOSup = not na(rollHH_D) and close > rollHH_D + bufD
+dBOSdn = not na(rollLL_D) and close < rollLL_D - bufD
+
+// حالت روزانه (خیلی ساده)
+dState = dBOSup ? 1 : dBOSdn ? -1 : dBias
+
+// سوییچ‌های کوچک
+useDailyInBypass = input.bool(true, "Use Daily bias in pre-BOS bypass")
+allowDailyNeutral = input.bool(true, "Allow bypass if Daily is neutral")
+
+// شرط‌های کمکی برای بای‌پس
+dailyOK_Long  = dState > 0 or (allowDailyNeutral and dState == 0)
+dailyOK_Short = dState < 0 or (allowDailyNeutral and dState == 0)
+
+// =============================================================================
+// INTEGRATE STRUCTURE FILTERS - CLEAN VERSION (WITH DAILY BIAS)
+// =============================================================================
+useRangeBypass = input.bool(true, "Allow pre-BOS longs in ranges (low ADX)")
+
+// CHOCH فقط Early entries را غیرفعال می‌کند
+earlyLongFiltered  = useChochSoft and chochWarning ? false : earlyLong
+earlyShortFiltered = useChochSoft and chochWarning ? false : earlyShort
+
+// Rolling HH/LL برای حذف تأخیر پیوت در ADX پایین
+preHH     = ta.highest(high, swingLen)
+preLL     = ta.lowest(low, swingLen)
+preBosUp  = not na(preHH) and close > preHH + (atr * bosBufAtr * 0.50)
+preBosDn  = not na(preLL) and close < preLL - (atr * bosBufAtr * 0.50)
+
+// گیت ساختار «ریلکس» فقط در رنج‌های ADX پایین - با فیلتر روزانه
+struct_ok_long_relaxed = struct_ok_long or (useRangeBypass and adxLow and preBosUp and (not useDailyInBypass or dailyOK_Long))
+
+struct_ok_short_relaxed = struct_ok_short or (useRangeBypass and adxLow and preBosDn and (not useDailyInBypass or dailyOK_Short))
+
+// سیگنال نهایی با فیلتر ساختار
+shouldLongNow = (breakoutLong or pullbackLong or crossLongOK or earlyLongFiltered) and struct_ok_long_relaxed
+shouldShortNow = (breakoutShort or pullbackShort or crossShortOK or earlyShortFiltered) and struct_ok_short_relaxed
+
+// =============================================================================
+// INSTITUTIONAL ADD-ON FILTERS (NON-INTRUSIVE)
+// =============================================================================
+// 1) BOS / CHOCH Market Structure (Improved)
+swingH = high == ta.highest(high, swingLen)
+swingL = low == ta.lowest(low, swingLen)
+
+var float ms_lastHH = na
+var float ms_lastLL = na
+
+if swingH
+    ms_lastHH := high
+if swingL
+    ms_lastLL := low
+
+bos_up = not na(ms_lastHH) and high > ms_lastHH
+bos_dn = not na(ms_lastLL) and low < ms_lastLL
+
+bos_ok_long = bos_up
+bos_ok_short = bos_dn
+
+// 2) Liquidity Sweep Detection
+swingHighPrice = swingH ? high : na
+swingLowPrice  = swingL ? low  : na
+prevSwingHigh  = nz(swingHighPrice[1])
+prevSwingLow   = nz(swingLowPrice[1])
+
+liqSweepHigh = not na(prevSwingHigh) and high > prevSwingHigh and close < prevSwingHigh
+liqSweepLow  = not na(prevSwingLow) and low < prevSwingLow and close > prevSwingLow
+
+liq_ok_long  = not liqSweepHigh
+liq_ok_short = not liqSweepLow
+
+// 3) Fair Value Gap (FVG)
+fvg_up = low[1] > high[2]
+fvg_dn = high[1] < low[2]
+
+var bool pendingFvgLong = false
+var bool pendingFvgShort = false
+
+if fvg_up
+    pendingFvgLong := true
+if pendingFvgLong and low <= high[1]
+    pendingFvgLong := false
+
+if fvg_dn
+    pendingFvgShort := true
+if pendingFvgShort and high >= low[1]
+    pendingFvgShort := false
+
+fvg_ok_long  = not pendingFvgLong
+fvg_ok_short = not pendingFvgShort
+
+// 4) Order Block + Breaker Blocks
+var float bullObLow = na
+var float bearObHigh = na
+var bool bullObInvalidated = false
+var bool bearObInvalidated = false
+
+bullOB = close[1] < open[1] and not na(ms_lastHH) and high > ms_lastHH
+bearOB = close[1] > open[1] and not na(ms_lastLL) and low < ms_lastLL
+
+if bullOB
+    bullObLow := low[1]
+    bullObInvalidated := false
+if bearOB
+    bearObHigh := high[1]
+    bearObInvalidated := false
+
+if not na(bullObLow)
+    if close < bullObLow
+        bullObInvalidated := true
+
+breakerLong = bullObInvalidated and not na(bullObLow) and close > bullObLow and low <= bullObLow
+
+if not na(bearObHigh)
+    if close > bearObHigh
+        bearObInvalidated := true
+
+breakerShort = bearObInvalidated and not na(bearObHigh) and close < bearObHigh and high >= bearObHigh
+
+bullObActive = not na(bullObLow) and not bullObInvalidated
+bearObActive = not na(bearObHigh) and not bearObInvalidated
+
+ob_ok_long  = bullOB or breakerLong or bullObActive or na(bullObLow)
+ob_ok_short = bearOB or breakerShort or bearObActive or na(bearObHigh)
+
+// 5) ATR Regimes
+atrNorm = safe_div(atr, ta.sma(atr, 50))
+lowVol  = atrNorm < 0.7
+highVol = atrNorm > 1.3
+
+atr_ok_long  = not lowVol
+atr_ok_short = not lowVol
+
+// =============================================================================
+// FINAL FILTER ATTACHMENT
+// =============================================================================
+shouldLongNow := shouldLongNow and bos_ok_long and liq_ok_long and fvg_ok_long and ob_ok_long and atr_ok_long
+
+shouldShortNow := shouldShortNow and bos_ok_short and liq_ok_short and fvg_ok_short and ob_ok_short and atr_ok_short
+/// =============================================================================
+// DEBUG LABEL: WHY NO LONG? - ONLY ON IMPORTANT BARS
+// =============================================================================
+// =============================================================================
+// DEBUG LABEL: WHY NO LONG? - OPTIMIZED
+// =============================================================================
+var label[] longLabels = array.new<label>()
+var int maxLabels = 30  // حداکثر 30 لیبل نمایش داده بشه
+
+longTrig = nz(breakoutLong) or nz(pullbackLong)
+okLong = nz(shouldLongNow, false)
+
+if barstate.isconfirmed and longTrig and not okLong
+    // مدیریت لیبل‌های قدیمی
+    if array.size(longLabels) >= maxLabels
+        label.delete(array.get(longLabels, 0))
+        array.remove(longLabels, 0)
+    
+    // فقط نمایش اطلاعات ضروری
+    txt = "NO LONG"
+    if not struct_ok_long
+        txt += " | Struct:" + str.tostring(structState)
+    if not (adxS > adxBase)
+        txt += " | ADX"
+    if not trendFilterLongOK
+        txt += " | Daily"
+    if inCooldown
+        txt += " | Cool"
+    
+    newLabel = label.new(bar_index, high * 1.001, txt, style=label.style_label_down,
+              color=color.new(color.blue, 0), textcolor=color.white, size=size.small)
+    array.push(longLabels, newLabel)
+
+// =============================================================================
+// DEBUG LABEL: WHY NO SHORT? - OPTIMIZED
+// =============================================================================
+var label[] shortLabels = array.new<label>()
+var int maxLabelsShort = 30  // حداکثر 30 لیبل نمایش داده بشه
+
+shortTrig = nz(breakoutShort) or nz(pullbackShort)
+okShort = nz(shouldShortNow, false)
+
+if barstate.isconfirmed and shortTrig and not okShort
+    // مدیریت لیبل‌های قدیمی
+    if array.size(shortLabels) >= maxLabelsShort
+        label.delete(array.get(shortLabels, 0))
+        array.remove(shortLabels, 0)
+    
+    // فقط نمایش اطلاعات ضروری
+    txt = "NO SHORT"
+    if not struct_ok_short
+        txt += " | Struct:" + str.tostring(structState)
+    if not (adxS > adxBase)
+        txt += " | ADX"
+    if not trendFilterShortOK
+        txt += " | Daily"
+    if inCooldown
+        txt += " | Cool"
+    
+    newLabel = label.new(bar_index, low * 0.999, txt, style=label.style_label_up,
+              color=color.new(color.red, 0), textcolor=color.white, size=size.small)
+    array.push(shortLabels, newLabel)
+// =============================================================================
+// TEST LABEL - برای اطمینان از کارکرد لیبل‌ها
+// =============================================================================
+
+
+// =============================================================================
+// DYNAMIC TRAILING STOP — only after TP1
+// =============================================================================
+if strategy.position_size > 0 and tp1HitL
+    dynStopL := trail_up(dynStopL, close - atrMultSL * atr)
+else if strategy.position_size <= 0
+    dynStopL := na
+
+if strategy.position_size < 0 and tp1HitS
+    dynStopS := trail_down(dynStopS, close + atrMultSL * atr)
+else if strategy.position_size >= 0
+    dynStopS := na
+
+// ───────── SIZING & ENTRIES ─────────
+riskCap = strategy.equity * riskPct
+riskDen = math.max(atrMultSL * atr, 1e-10)
+qtyCore = math.max(riskCap / riskDen, 0)
+
+// Early partials - با منطق جدید
+if earlyLong and struct_ok_long and not (useChochSoft and chochWarning)
+    strategy.entry("RADAR_Early_L", strategy.long,  qty=qtyCore * earlyQtyFrac)
+    entryPriceL := strategy.position_avg_price
+    atrAtEntryL := atr
+    tp1HitL := false
+    initedL := true
+
+if earlyShort and struct_ok_short and not (useChochSoft and chochWarning)
+    strategy.entry("RADAR_Early_S", strategy.short, qty=qtyCore * earlyQtyFrac)
+    entryPriceS := strategy.position_avg_price
+    atrAtEntryS := atr
+    tp1HitS := false
+    initedS := true
+
+// CORE & CROSS ENTRIES  (respect pyramiding=0)
+if (breakoutLong or pullbackLong or crossLongOK) and shouldLongNow
+    targetQtyL = qtyCore
+    curPosL    = strategy.position_size > 0 ? strategy.position_size : 0.0
+    addQtyL    = math.max(targetQtyL - curPosL, 0.0)
+    if addQtyL > 0
+        strategy.entry("RADAR_Long", strategy.long, qty=addQtyL)
+        entryPriceL := strategy.position_avg_price
+        atrAtEntryL := atr
+        tp1HitL := false
+        initedL := true
+
+if (breakoutShort or pullbackShort or crossShortOK) and shouldShortNow
+    targetQtyS = qtyCore
+    curPosS    = strategy.position_size < 0 ? -strategy.position_size : 0.0
+    addQtyS    = math.max(targetQtyS - curPosS, 0.0)
+    if addQtyS > 0
+        strategy.entry("RADAR_Short", strategy.short, qty=addQtyS)
+        entryPriceS := strategy.position_avg_price
+        atrAtEntryS := atr
+        tp1HitS := false
+        initedS := true
+
+// ───────── EXITS ─────────
+// سطوح Long
+tp1L      = entryPriceL + (atrMultSL * atrAtEntryL * tp1Ratio)
+tp2TrailL = close - (tp2TrailAtrL * atr)
+
+// سطوح Short
+tp1S      = entryPriceS - (atrMultSL * atrAtEntryS * tp1Ratio)
+tp2TrailS = close + (tp2TrailAtrS * atr)
+
+// رسیدن به TP1 + فعال‌سازی BE با بافر
+if strategy.position_size > 0 and not tp1HitL and high >= tp1L
+    tp1HitL := true
+    if useBreakEven
+        dynStopL := math.max(dynStopL, entryPriceL - beBuf * atr)
+if strategy.position_size < 0 and not tp1HitS and low <= tp1S
+    tp1HitS := true
+    if useBreakEven
+        dynStopS := math.min(dynStopS, entryPriceS + beBuf * atr)
+//
+// آپدیت Trail (فقط پس از TP1)
+if strategy.position_size > 0 and tp1HitL
+    dynStopL := trail_up(dynStopL, tp2TrailL)
+if strategy.position_size < 0 and tp1HitS
+    dynStopS := trail_down(dynStopS, tp2TrailS)
+
+// =============================================================================
+// STRUCTURAL EXIT TIGHTENING
+// =============================================================================
+// Opposite BOS tightening for active positions
+if strategy.position_size > 0 and structState == -1
+    dynStopL := math.max(dynStopL, close - 1.6 * atr)
+if strategy.position_size < 0 and structState == 1  
+    dynStopS := math.min(dynStopS, close + 1.6 * atr)
+
+// WEAK SIGNAL EXIT CONDITIONS
+exitWeakRawL = (close < slowMA) or (adxS < 18) or (diplus < diminus)
+exitWeakL    = ta.barssince(not exitWeakRawL) >= weakConfirmBars
+
+exitWeakRawS = (close > slowMA) or (adxS < 20) or (diplus > diminus)
+exitWeakS    = ta.barssince(not exitWeakRawS) >= weakConfirmBars
+
+// WEAK TIGHTENING
+if initedL and strategy.position_size > 0 and exitWeakL
+    dynStopL := math.max(dynStopL, slowMA - 0.3 * atr, entryPriceL)
+if initedS and strategy.position_size < 0 and exitWeakS
+    tightS = math.max(slowMA, close + 0.2 * atr)
+    dynStopS := math.min(dynStopS, tightS)
+
+// خروج‌ها (با tp1Pct تقسیم می‌کنیم)
+if strategy.position_size > 0
+    if exitWeakL
+        strategy.close("RADAR_Long", comment="Weak_Exit_L")
+        strategy.close("RADAR_Early_L", comment="Weak_Exit_L")
+        strategy.close("RADAR_Cross_L", comment="Weak_Exit_L")
+    else
+        strategy.exit("L-TP1",   limit=tp1L,  qty_percent=tp1Pct)
+        strategy.exit("L-TRAIL", stop=dynStopL, qty_percent=100 - tp1Pct)
+
+if strategy.position_size < 0
+    if exitWeakS
+        strategy.close("RADAR_Short", comment="Weak_Exit_S")
+        strategy.close("RADAR_Early_S", comment="Weak_Exit_S")
+        strategy.close("RADAR_Cross_S", comment="Weak_Exit_S")
+    else
+        strategy.exit("S-TP1",   limit=tp1S,  qty_percent=tp1Pct)
+        strategy.exit("S-TRAIL", stop=dynStopS, qty_percent=100 - tp1Pct)
+
+// ریست
+if strategy.position_size == 0
+    tp1HitL := false
+    tp1HitS := false
+    entryPriceL := na
+    entryPriceS := na
+    atrAtEntryL := na
+    atrAtEntryS := na
+    initedL := false
+    initedS := false
+
+// ───────── PLOTS ─────────
+plot(ma_select(close, maFastLen, maType), "Fast MA (20)", color=color.new(color.blue, 0), linewidth=2)
+plot(ma_select(close, maSlowLen, maType), "Slow MA (50)", color=color.new(color.red,  0), linewidth=2)
+plot(ma_select(close, maRegLen,  maType), "Regime (200)", color=color.new(color.gray,40), linewidth=2)
+
+// BOS Line for visual confirmation
+plot((structState >= 0 and not na(lastHH)) ? (lastHH + bosBuf) : na, "BOS Up Line", color=color.new(color.green, 60), linewidth=1, style=plot.style_line)
+bosDnLine = (structState <= 0 and not na(lastLL)) ? (lastLL - bosBuf) : na
+plot(bosDnLine, "BOS Down Line", color=color.new(color.red, 60), linewidth=1, style=plot.style_line)
+
+// (اختیاری) نمایش preLL برای بای‌پس
+plot(preLL, "Rolling LL", color=color.new(color.purple, 60), linewidth=3, style=plot.style_line)
+
+// Plot Market Structure Levels with adaptive colors
+plot(not na(lastHH) ? lastHH : na, "Last HH", color=structState == 1 ? color.green : color.gray, style=plot.style_circles, linewidth=2)
+plot(not na(lastLL) ? lastLL : na, "Last LL", color=structState == -1 ? color.red : color.gray, style=plot.style_circles, linewidth=2)
+plot(not na(lastHL) ? lastHL : na, "Last HL", color=color.new(color.lime, 0), style=plot.style_cross, linewidth=1)
+plot(not na(lastLH) ? lastLH : na, "Last LH", color=color.new(color.orange, 0), style=plot.style_cross, linewidth=1)
+
+// Background for ADX regime and structure states
+bgcolor(adxLow ? color.new(color.orange, 97) : color.new(color.blue, 97), title="ADX Regime")
+bgcolor(structState == 1 ? color.new(color.green, 95) : structState == -1 ? color.new(color.red, 95) : color.new(color.gray, 95))
+bgcolor(chochWarning ? color.new(color.orange, 70) : na)
+
+bgcolor(breakoutLong  ? color.new(color.green,90)  : na)
+bgcolor(pullbackLong  ? color.new(color.orange,90) : na)
+bgcolor(breakoutShort ? color.new(color.purple,88) : na)
+bgcolor(pullbackShort ? color.new(color.teal,88)   : na)
+
+// DEBUG
+plot(strategy.position_size > 0 ? tp1L : na, "TP1 Long", color=color.new(color.green, 0), style=plot.style_circles)
+plot(strategy.position_size > 0 ? dynStopL : na, "Trail Stop Long", color=color.new(color.red, 0), style=plot.style_circles)
+
+// =============================================================================
+// SIMPLE VISUAL DEBUG
+// =============================================================================
+
+// Plot values in data window
+plotchar(structState, "Struct State", "", location.top, color=na)
+plotchar(adxS, "ADX", "", location.top, color=na)
+plotchar(adxBase, "ADX Base", "", location.top, color=na)
+plotchar(rsi, "RSI", "", location.top, color=na)
+plotchar(dailyUp, "Daily Up", "", location.top, color=na)
+plotchar(inCooldown, "Cooldown", "", location.top, color=na)
+plotchar(shouldLongNow, "Should Long", "", location.top, color=na)
+plotchar(shouldShortNow, "Should Short", "", location.top, color=na)
+
+// Simple shapes for signals
+plotshape(shouldLongNow, "Long Signal", style=shape.triangleup, location=location.belowbar, color=color.green, size=size.small)
+plotshape(shouldShortNow, "Short Signal", style=shape.triangledown, location=location.abovebar, color=color.red, size=size.small)
+
+// Structure indicators
+plotshape(structState == 1, "Bull Market", style=shape.flag, location=location.belowbar, color=color.lime, size=size.tiny)
+plotshape(structState == -1, "Bear Market", style=shape.flag, location=location.abovebar, color=color.red, size=size.tiny)
